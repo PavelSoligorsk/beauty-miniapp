@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Панель мастера - Beauty Studio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Шапка */
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 24px;
+        }
+
+        .master-info {
+            text-align: right;
+        }
+
+        .master-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .master-specialty {
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* Вкладки */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: #2c3e50;
+            color: white;
+        }
+
+        /* Панели */
+        .panel {
+            display: none;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        /* Формы */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        button {
+            background: #2c3e50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        button.danger {
+            background: #e74c3c;
+        }
+
+        button.success {
+            background: #27ae60;
+        }
+
+        /* Календарь */
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .calendar-day {
+            background: #f8f9fa;
+            padding: 10px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .calendar-day:hover {
+            background: #e9ecef;
+        }
+
+        .calendar-day.selected {
+            background: #2c3e50;
+            color: white;
+        }
+
+        .calendar-day.weekend {
+            background: #fff3e0;
+        }
+
+        .calendar-day.today {
+            border: 2px solid #27ae60;
+        }
+
+        .day-number {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .day-name {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        /* Слоты времени */
+        .slots-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .slot {
+            text-align: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .slot:hover {
+            background: #e9ecef;
+        }
+
+        .slot.booked {
+            background: #e74c3c;
+            color: white;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .slot.available {
+            background: #27ae60;
+            color: white;
+        }
+
+        .slot.selected {
+            background: #2c3e50;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        /* Таблицы */
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .table th, .table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .table th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .status-badge.active {
+            background: #27ae60;
+            color: white;
+        }
+
+        .status-badge.cancelled {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .status-badge.completed {
+            background: #3498db;
+            color: white;
+        }
+
+        /* Модальное окно */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            width: 500px;
+            max-width: 90%;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .close-btn {
+            background: none;
+            color: #999;
+            font-size: 24px;
+            padding: 0;
+        }
+
+        /* Сообщения */
+        .message {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            z-index: 1001;
+            animation: slideIn 0.3s ease;
+        }
+
+        .message.success {
+            background: #27ae60;
+        }
+
+        .message.error {
+            background: #e74c3c;
+        }
+
+        .message.info {
+            background: #3498db;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .work-hours {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .break-btn {
+            background: #e67e22;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>👨‍💼 Панель мастера</h1>
+            <div class="master-info" id="master-info">
+                <div class="master-name">Загрузка...</div>
+                <div class="master-specialty"></div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="schedule">📅 Моё расписание</button>
+            <button class="tab" data-tab="bookings">📋 Мои записи</button>
+            <button class="tab" data-tab="stats">📊 Статистика</button>
+            <button class="tab" data-tab="settings">⚙️ Настройки</button>
+        </div>
+
+        <!-- Расписание -->
+        <div id="schedule-panel" class="panel active">
+            <div class="work-hours">
+                <h3>⏰ Рабочие часы</h3>
+                <p>10:00 - 20:00 (перерыв 14:00-15:00)</p>
+                <button class="break-btn" onclick="Master.toggleBreak()">☕ Объявить перерыв</button>
+            </div>
+            
+            <div class="calendar" id="calendar"></div>
+            
+            <div id="slots-container" style="display: none;">
+                <h3>Свободное время</h3>
+                <div id="slots-list" class="slots-grid"></div>
+            </div>
+        </div>
+
+        <!-- Мои записи -->
+        <div id="bookings-panel" class="panel">
+            <div class="form-group">
+                <label>Фильтр по дате</label>
+                <input type="date" id="filter-date" onchange="Master.filterByDate()">
+            </div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Время</th>
+                        <th>Клиент</th>
+                        <th>Услуга</th>
+                        <th>Статус</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="bookings-list"></tbody>
+            </table>
+        </div>
+
+        <!-- Статистика -->
+        <div id="stats-panel" class="panel">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="today-bookings">0</div>
+                    <div class="stat-label">Записей сегодня</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="week-bookings">0</div>
+                    <div class="stat-label">Записей за неделю</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="month-revenue">0 ₽</div>
+                    <div class="stat-label">Выручка за месяц</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="completed-bookings">0</div>
+                    <div class="stat-label">Выполнено</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Настройки -->
+        <div id="settings-panel" class="panel">
+            <form id="settings-form">
+                <div class="form-group">
+                    <label>Моё имя</label>
+                    <input type="text" id="master-name-settings" required>
+                </div>
+                <div class="form-group">
+                    <label>Специализация</label>
+                    <input type="text" id="master-specialty-settings">
+                </div>
+                <div class="form-group">
+                    <label>Телефон</label>
+                    <input type="text" id="master-phone">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="master-email">
+                </div>
+                <div class="form-group">
+                    <label>Мои услуги</label>
+                    <select id="master-services-settings" multiple size="5"></select>
+                    <small>Удерживайте Ctrl для выбора нескольких</small>
+                </div>
+                <button type="submit">Сохранить настройки</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно для деталей записи -->
+    <div id="booking-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Детали записи</h3>
+                <button class="close-btn" onclick="Master.closeBookingModal()">×</button>
+            </div>
+            <div id="booking-details"></div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="success" onclick="Master.completeBooking()">✅ Отметить выполненной</button>
+                <button class="danger" onclick="Master.cancelBookingFromModal()">❌ Отменить запись</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="message"></div>
+
+    <script src="js/master.js"></script>
+</body>
+</html>
