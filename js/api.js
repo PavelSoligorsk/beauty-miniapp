@@ -116,5 +116,22 @@ const API = {
             console.error('API Error:', error);
             throw error;
         }
+    },
+
+        async getAdminStats() {
+        try {
+            const response = await fetch(`${this.baseURL}/admin/stats`);
+            if (!response.ok) throw new Error('Ошибка загрузки');
+            return await response.json();
+        } catch (error) {
+            console.error('Stats Error:', error);
+            return {
+                total_bookings: 0,
+                active_bookings: 0,
+                active_services: 0,
+                active_masters: 0,
+                monthly_revenue: 0
+            };
+        }
     }
 };
