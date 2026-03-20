@@ -1,16 +1,18 @@
 // API для работы с бэкендом
 const API = {
-    baseURL: 'http://localhost:8000', // Замените на ваш URL
+    baseURL: 'http://localhost:8000', // Замените на ваш URL после деплоя
     
     // Получить услуги
     async getServices() {
         try {
             const response = await fetch(`${this.baseURL}/services`);
             if (!response.ok) throw new Error('Ошибка загрузки');
-            return await response.json();
+            const data = await response.json();
+            // Бэкенд возвращает данные с полями id, name, price, duration
+            return data;
         } catch (error) {
             console.error('API Error:', error);
-            // Возвращаем тестовые данные если бэкенд не работает
+            // Фолбэк на тестовые данные
             return [
                 { id: 1, name: '💇‍♀️ Стрижка женская', price: 2500, duration: 60 },
                 { id: 2, name: '💇‍♂️ Стрижка мужская', price: 1500, duration: 30 },
@@ -20,18 +22,21 @@ const API = {
         }
     },
     
-    // Получить мастеров
+    // Получить мастеров (с их услугами)
     async getMasters() {
         try {
             const response = await fetch(`${this.baseURL}/masters`);
             if (!response.ok) throw new Error('Ошибка загрузки');
-            return await response.json();
+            const data = await response.json();
+            // Бэкенд возвращает мастеров с полями id, name, specialty, services
+            return data;
         } catch (error) {
             console.error('API Error:', error);
             return [
-                { id: 1, name: 'Анна', specialty: 'Женские стрижки' },
-                { id: 2, name: 'Дмитрий', specialty: 'Мужские стрижки' },
-                { id: 3, name: 'Елена', specialty: 'Маникюр' }
+                { id: 1, name: 'Анна', specialty: 'Женские стрижки, окрашивание', services: [] },
+                { id: 2, name: 'Дмитрий', specialty: 'Мужские стрижки, барбер', services: [] },
+                { id: 3, name: 'Елена', specialty: 'Маникюр, педикюр', services: [] },
+                { id: 4, name: 'Мария', specialty: 'Уход за лицом, визаж', services: [] }
             ];
         }
     },
@@ -47,8 +52,8 @@ const API = {
             // Генерируем тестовые слоты
             const slots = [];
             for (let hour = 10; hour < 20; hour++) {
-                slots.push(`${hour}:00`);
-                slots.push(`${hour}:30`);
+                slots.push(`${hour.toString().padStart(2, '0')}:00`);
+                slots.push(`${hour.toString().padStart(2, '0')}:30`);
             }
             return slots;
         }
@@ -60,28 +65,26 @@ const API = {
             const response = await fetch(`${this.baseURL}/book`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(booking)
+                body: JSON.stringify({
+                    service_id: booking.service_id,
+                    master_id: booking.master_id,
+                    date: booking.date,
+                    time: booking.time,
+                    user_id: booking.user_id,
+                    user_name: booking.user_name,
+                    notes: booking.notes || null
+                })
             });
             
             if (!response.ok) {
                 const error = await response.json();
-                throw new Error(error.error || 'Ошибка создания');
+                throw new Error(error.detail || 'Ошибка создания');
             }
             
             return await response.json();
         } catch (error) {
             console.error('API Error:', error);
-            // Для тестов сохраняем в localStorage
-            const bookings = Utils.getFromLocalStorage('bookings') || [];
-            const newBooking = {
-                ...booking,
-                id: Date.now(),
-                status: 'active',
-                created_at: new Date().toISOString()
-            };
-            bookings.push(newBooking);
-            Utils.saveToLocalStorage('bookings', bookings);
-            return { status: 'ok', message: 'Запись создана (тест)', booking_id: newBooking.id };
+            throw error;
         }
     },
     
@@ -93,9 +96,7 @@ const API = {
             return await response.json();
         } catch (error) {
             console.error('API Error:', error);
-            // Получаем из localStorage
-            const bookings = Utils.getFromLocalStorage('bookings') || [];
-            return bookings.filter(b => b.user_id === userId && b.status === 'active');
+            return [];
         }
     },
     
@@ -106,17 +107,14 @@ const API = {
                 method: 'DELETE'
             });
             
-            if (!response.ok) throw new Error('Ошибка отмены');
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || 'Ошибка отмены');
+            }
             return await response.json();
         } catch (error) {
             console.error('API Error:', error);
-            // Обновляем в localStorage
-            const bookings = Utils.getFromLocalStorage('bookings') || [];
-            const updatedBookings = bookings.map(b => 
-                b.id === bookingId ? { ...b, status: 'cancelled' } : b
-            );
-            Utils.saveToLocalStorage('bookings', updatedBookings);
-            return { status: 'ok', message: 'Запись отменена (тест)' };
+            throw error;
         }
     }
 };

@@ -395,3 +395,38 @@ body {
         grid-template-columns: repeat(2, 1fr);
     }
 }
+
+/* Дополнительные стили */
+.master-specialty {
+    font-size: 14px;
+    opacity: 0.8;
+    margin-top: 4px;
+}
+
+.master-services {
+    font-size: 12px;
+    opacity: 0.7;
+    margin-top: 8px;
+    color: var(--tg-theme-hint-color, #666);
+}
+
+.service-description {
+    font-size: 12px;
+    opacity: 0.7;
+    margin-top: 4px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: var(--tg-theme-hint-color, #999);
+}
+
+.empty-state p {
+    margin: 10px 0;
+}
+
+.hint {
+    font-size: 14px;
+    opacity: 0.7;
+}

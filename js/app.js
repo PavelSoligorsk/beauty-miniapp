@@ -7,6 +7,7 @@ const App = {
     selectedDate: null,
     selectedTime: null,
     currentStep: 'services',
+    mastersList: [], // Список мастеров с их услугами
     
     // Инициализация
     async init() {
@@ -39,10 +40,11 @@ const App = {
         try {
             const services = await API.getServices();
             container.innerHTML = services.map(service => `
-                <div class="service-card" data-id="${service.id}">
+                <div class="service-card" data-id="${service.id}" data-name="${service.name}" data-price="${service.price}" data-duration="${service.duration}">
                     <strong>${service.name}</strong>
                     <div class="service-price">${service.price} ₽</div>
                     <div class="service-duration">⏱ ${service.duration} мин</div>
+                    ${service.description ? `<div class="service-description">${service.description}</div>` : ''}
                 </div>
             `).join('');
             
@@ -62,11 +64,13 @@ const App = {
         const container = document.getElementById('masters-list');
         
         try {
-            const masters = await API.getMasters();
-            container.innerHTML = masters.map(master => `
-                <div class="master-card" data-id="${master.id}">
+            this.mastersList = await API.getMasters();
+            container.innerHTML = this.mastersList.map(master => `
+                <div class="master-card" data-id="${master.id}" data-name="${master.name}">
                     <strong>${master.name}</strong>
-                    <div>${master.specialty}</div>
+                    <div class="master-specialty">${master.specialty || ''}</div>
+                    ${master.services && master.services.length > 0 ? 
+                        `<div class="master-services">🎯 ${master.services.map(s => s.name).join(', ')}</div>` : ''}
                 </div>
             `).join('');
             
@@ -88,13 +92,44 @@ const App = {
         // Сохраняем выбранную услугу
         this.selectedService = {
             id: parseInt(card.dataset.id),
-            name: card.querySelector('strong').innerText,
-            price: parseInt(card.querySelector('.service-price').innerText),
-            duration: parseInt(card.querySelector('.service-duration').innerText)
+            name: card.dataset.name,
+            price: parseInt(card.dataset.price),
+            duration: parseInt(card.dataset.duration)
         };
+        
+        // Фильтруем мастеров по услуге
+        this.filterMastersByService();
         
         // Переходим к выбору мастера
         this.showStep('masters');
+    },
+    
+    // Фильтрация мастеров по выбранной услуге
+    filterMastersByService() {
+        const container = document.getElementById('masters-list');
+        const filteredMasters = this.mastersList.filter(master => {
+            // Если у мастера нет услуг, показываем всех
+            if (!master.services || master.services.length === 0) return true;
+            // Проверяем, может ли мастер выполнить выбранную услугу
+            return master.services.some(s => s.id === this.selectedService.id);
+        });
+        
+        if (filteredMasters.length === 0) {
+            container.innerHTML = '<div class="empty-state">Нет мастеров для этой услуги</div>';
+            return;
+        }
+        
+        container.innerHTML = filteredMasters.map(master => `
+            <div class="master-card" data-id="${master.id}" data-name="${master.name}">
+                <strong>${master.name}</strong>
+                <div class="master-specialty">${master.specialty || ''}</div>
+            </div>
+        `).join('');
+        
+        // Добавляем обработчики
+        document.querySelectorAll('.master-card').forEach(card => {
+            card.addEventListener('click', () => this.selectMaster(card));
+        });
     },
     
     // Выбор мастера
@@ -106,7 +141,7 @@ const App = {
         // Сохраняем выбранного мастера
         this.selectedMaster = {
             id: parseInt(card.dataset.id),
-            name: card.querySelector('strong').innerText
+            name: card.dataset.name
         };
         
         // Переходим к выбору даты и времени
@@ -206,20 +241,24 @@ const App = {
         try {
             const booking = {
                 service_id: this.selectedService.id,
-                service_name: this.selectedService.name,
                 master_id: this.selectedMaster.id,
-                master_name: this.selectedMaster.name,
                 date: this.selectedDate,
                 time: this.selectedTime,
                 user_id: this.user.id,
-                user_name: `${this.user.first_name} ${this.user.last_name || ''}`
+                user_name: `${this.user.first_name} ${this.user.last_name || ''}`.trim(),
+                notes: null
             };
             
             const result = await API.createBooking(booking);
             
             // Отправляем данные в Telegram
             if (window.Telegram?.WebApp) {
-                window.Telegram.WebApp.sendData(JSON.stringify(booking));
+                window.Telegram.WebApp.sendData(JSON.stringify({
+                    service: this.selectedService.name,
+                    master: this.selectedMaster.name,
+                    date: Utils.formatDate(this.selectedDate),
+                    time: this.selectedTime
+                }));
             }
             
             Utils.showMessage(result.message, 'success');
@@ -228,11 +267,11 @@ const App = {
             setTimeout(() => {
                 this.resetForm();
                 this.showStep('services');
-                this.loadMyBookings(); // Обновляем список записей
+                this.loadMyBookings();
             }, 2000);
             
         } catch (error) {
-            Utils.showMessage('Ошибка создания записи', 'error');
+            Utils.showMessage(error.message || 'Ошибка создания записи', 'error');
             confirmBtn.disabled = false;
             confirmBtn.textContent = '✅ Подтвердить запись';
         }
@@ -264,7 +303,8 @@ const App = {
                     </div>
                     <div class="booking-details">
                         <p>👤 ${booking.master_name}</p>
-                        <p>📅 ${Utils.formatDate(booking.date)} в ${booking.time}</p>
+                        <p>📅 ${Utils.formatDate(booking.booking_date)} в ${booking.booking_time}</p>
+                        ${booking.notes ? `<p>📝 ${booking.notes}</p>` : ''}
                     </div>
                     <button class="cancel-btn" data-id="${booking.id}">Отменить запись</button>
                 </div>
@@ -289,9 +329,9 @@ const App = {
         try {
             await API.cancelBooking(bookingId);
             Utils.showMessage('Запись отменена', 'success');
-            this.loadMyBookings(); // Обновляем список
+            this.loadMyBookings();
         } catch (error) {
-            Utils.showMessage('Ошибка отмены записи', 'error');
+            Utils.showMessage(error.message || 'Ошибка отмены записи', 'error');
         }
     },
     
@@ -318,6 +358,9 @@ const App = {
         if (slotsContainer) {
             slotsContainer.classList.add('hidden');
         }
+        
+        // Перезагружаем полный список мастеров
+        this.loadMasters();
     },
     
     // Показать шаг
@@ -371,12 +414,6 @@ const App = {
         const confirmBtn = document.getElementById('confirm-btn');
         if (confirmBtn) {
             confirmBtn.addEventListener('click', () => this.confirmBooking());
-        }
-        
-        // Обновляем список записей при переключении на вкладку "Мои записи"
-        const myTab = document.querySelector('.tab[data-tab="my"]');
-        if (myTab) {
-            myTab.addEventListener('click', () => this.loadMyBookings());
         }
     }
 };
