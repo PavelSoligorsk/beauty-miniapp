@@ -234,48 +234,42 @@ const App = {
     
     // Подтверждение записи
     async confirmBooking() {
-        const confirmBtn = document.getElementById('confirm-btn');
-        confirmBtn.disabled = true;
-        confirmBtn.textContent = 'Создание...';
+    const confirmBtn = document.getElementById('confirm-btn');
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'Создание...';
+    
+    try {
+        // Формируем данные для отправки на сервер
+        const booking = {
+            service_id: this.selectedService.id,
+            master_id: this.selectedMaster.id,
+            date: this.selectedDate,
+            time: this.selectedTime,
+            user_id: this.user.id,
+            user_name: `${this.user.first_name} ${this.user.last_name || ''}`.trim(),
+            notes: null
+        };
         
-        try {
-            const booking = {
-                service_id: this.selectedService.id,
-                master_id: this.selectedMaster.id,
-                date: this.selectedDate,
-                time: this.selectedTime,
-                user_id: this.user.id,
-                user_name: `${this.user.first_name} ${this.user.last_name || ''}`.trim(),
-                notes: null
-            };
-            
-            const result = await API.createBooking(booking);
-            
-            // Отправляем данные в Telegram
-            if (window.Telegram?.WebApp) {
-                window.Telegram.WebApp.sendData(JSON.stringify({
-                    service: this.selectedService.name,
-                    master: this.selectedMaster.name,
-                    date: Utils.formatDate(this.selectedDate),
-                    time: this.selectedTime
-                }));
-            }
-            
-            Utils.showMessage(result.message, 'success');
-            
-            // Сбрасываем форму
-            setTimeout(() => {
-                this.resetForm();
-                this.showStep('services');
-                this.loadMyBookings();
-            }, 2000);
-            
-        } catch (error) {
-            Utils.showMessage(error.message || 'Ошибка создания записи', 'error');
-            confirmBtn.disabled = false;
-            confirmBtn.textContent = '✅ Подтвердить запись';
-        }
-    },
+        // Отправляем запрос на сервер
+        const result = await API.createBooking(booking);
+        
+        // Показываем сообщение об успехе
+        Utils.showMessage(result.message, 'success');
+        
+        // Сбрасываем форму через 2 секунды
+        setTimeout(() => {
+            this.resetForm();           // очищаем выбранные данные
+            this.showStep('services');  // возвращаемся к выбору услуг
+            this.loadMyBookings();      // обновляем список записей
+        }, 2000);
+        
+    } catch (error) {
+        // Обрабатываем ошибку
+        Utils.showMessage(error.message || 'Ошибка создания записи', 'error');
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = '✅ Подтвердить запись';
+    }
+},
     
     // Загрузка моих записей
     async loadMyBookings() {
