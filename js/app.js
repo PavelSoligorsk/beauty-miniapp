@@ -261,7 +261,10 @@ const App = {
             this.resetForm();           // очищаем выбранные данные
             this.showStep('services');  // возвращаемся к выбору услуг
             this.loadMyBookings();      // обновляем список записей
-        }, 2000);
+        }, 2);
+
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = '✅ Подтвердить запись';
         
     } catch (error) {
         // Обрабатываем ошибку
