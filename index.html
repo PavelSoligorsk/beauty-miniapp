@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Beauty Studio - Запись онлайн</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div class="app">
+        <!-- Шапка -->
+        <div class="header">
+            <h1>✨ Студия красоты</h1>
+            <p class="subtitle">Запись онлайн за 1 минуту</p>
+        </div>
+
+        <!-- Вкладки -->
+        <div class="tabs">
+            <button class="tab active" data-tab="booking">📅 Записаться</button>
+            <button class="tab" data-tab="my">📋 Мои записи</button>
+        </div>
+
+        <!-- Страница записи -->
+        <div id="booking-page" class="page active">
+            <!-- Шаг 1: Услуги -->
+            <div id="step-services" class="step">
+                <h2>Выберите услугу</h2>
+                <div id="services-list" class="services-grid"></div>
+            </div>
+
+            <!-- Шаг 2: Мастера -->
+            <div id="step-masters" class="step hidden">
+                <h2>Выберите мастера</h2>
+                <button class="back-btn" data-step="services">← Назад</button>
+                <div id="masters-list" class="masters-grid"></div>
+            </div>
+
+            <!-- Шаг 3: Дата и время -->
+            <div id="step-datetime" class="step hidden">
+                <h2>Выберите дату и время</h2>
+                <button class="back-btn" data-step="masters">← Назад</button>
+                <input type="date" id="date-picker" class="date-input">
+                <div id="slots-container" class="slots-container hidden">
+                    <h3>Свободное время</h3>
+                    <div id="slots-list" class="slots-grid"></div>
+                </div>
+            </div>
+
+            <!-- Шаг 4: Подтверждение -->
+            <div id="step-confirm" class="step hidden">
+                <h2>Подтверждение записи</h2>
+                <button class="back-btn" data-step="datetime">← Назад</button>
+                <div id="summary" class="summary"></div>
+                <button id="confirm-btn" class="confirm-btn">✅ Подтвердить запись</button>
+            </div>
+        </div>
+
+        <!-- Страница моих записей -->
+        <div id="my-page" class="page">
+            <h2>Мои записи</h2>
+            <div id="my-bookings-list" class="bookings-list"></div>
+        </div>
+    </div>
+
+    <!-- Сообщения -->
+    <div id="message" class="message hidden"></div>
+
+    <!-- Скрипты -->
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
