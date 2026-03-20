@@ -88,7 +88,7 @@ const API = {
         }
     },
     
-    // Получить записи пользователя
+    // Получить записи пользоаавателя
     async getUserBookings(userId) {
         try {
             const response = await fetch(`${this.baseURL}/bookings/${userId}`);
