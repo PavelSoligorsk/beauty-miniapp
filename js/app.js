@@ -10,27 +10,50 @@ const App = {
     mastersList: [], // Список мастеров с их услугами
     
     // Инициализация
-    async init() {
-        // Инициализируем Telegram WebApp
-        if (window.Telegram?.WebApp) {
-            const tg = window.Telegram.WebApp;
-            tg.expand();
-            tg.ready();
-            this.user = tg.initDataUnsafe?.user || { id: Date.now(), first_name: 'Гость' };
-        } else {
-            this.user = { id: Date.now(), first_name: 'Гость' };
-        }
+async init() {
+    // Инициализируем Telegram WebApp
+    if (window.Telegram?.WebApp) {
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.ready();
+        this.user = tg.initDataUnsafe?.user || { id: Date.now(), first_name: 'Гость' };
         
-        // Загружаем данные
-        await this.loadServices();
-        await this.loadMasters();
+        // Выводим всю информацию о пользователе
+        console.log('=== Telegram User Info ===');
+        console.log('Full user object:', this.user);
+        console.log('User ID:', this.user.id);
+        console.log('First name:', this.user.first_name);
+        console.log('Last name:', this.user.last_name || 'не указано');
+        console.log('Username:', this.user.username || 'не указан');
+        console.log('Language code:', this.user.language_code || 'не указан');
+        console.log('Is premium:', this.user.is_premium || false);
+        console.log('All user data:', JSON.stringify(this.user, null, 2));
         
-        // Настраиваем обработчики
-        this.setupEventListeners();
+        // Выводим информацию о WebApp
+        console.log('=== WebApp Info ===');
+        console.log('Platform:', tg.platform);
+        console.log('Color scheme:', tg.colorScheme);
+        console.log('Viewport height:', tg.viewportHeight);
+        console.log('Viewport stable height:', tg.viewportStableHeight);
         
-        // Показываем первый шаг
-        this.showStep('services');
-    },
+        // Выводим все initData если нужно
+        console.log('Init data:', tg.initData);
+        
+    } else {
+        this.user = { id: Date.now(), first_name: 'Гость' };
+        console.log('Telegram WebApp not available, using guest user:', this.user);
+    }
+    
+    // Загружаем данные
+    await this.loadServices();
+    await this.loadMasters();
+    
+    // Настраиваем обработчики
+    this.setupEventListeners();
+    
+    // Показываем первый шаг
+    this.showStep('services');
+},
     
     // Загрузка услуг
     async loadServices() {
